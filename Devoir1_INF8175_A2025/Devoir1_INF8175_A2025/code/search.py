@@ -116,8 +116,9 @@ def depthFirstSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 1 ICI
     '''
-    stack = util.Stack()
     start = problem.getStartState()
+    
+    stack = util.Stack()
     stack.push((start, []))
     visited = set()
 
@@ -146,8 +147,9 @@ def breadthFirstSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 2 ICI
     '''
-    stack = util.Queue()
     start = problem.getStartState()
+    
+    stack = util.Queue()
     stack.push((start, []))
     visited = set()
     
@@ -175,8 +177,29 @@ def uniformCostSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 3 ICI
     '''
+    start = problem.getStartState()
+    stack = util.PriorityQueue()
 
-    util.raiseNotDefined()
+    stack.push((start, [], 0),0)
+    visited = set()
+    
+
+    while not stack.isEmpty():
+        state, actions, cost = stack.pop()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        if problem.isGoalState(state):
+            return actions
+
+        for successor, action, cost2 in problem.getSuccessors(state):
+            if successor not in visited:
+                new_cost = cost + cost2
+                stack.push((successor, actions + [action], new_cost), new_cost)
+
+    return []
 
 def nullHeuristic(state:GameState, problem:SearchProblem=None)->List[Direction]:
     """
