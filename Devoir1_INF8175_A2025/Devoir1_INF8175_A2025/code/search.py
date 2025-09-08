@@ -97,11 +97,26 @@ def depthFirstSearch(problem:SearchProblem)->List[Direction]:
     print("Start:", problem.getStartState())
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+   
+    PSEUDO - CODE
+    s = initialState(P)
+    L = LIFO()
+    push(L,s)
+    while L != 0:
+        s = pop(L)
+        if s = goalState(P) : return solution
+        else:
+            C = {c E sucesors (s, P)}
+            push(L,C)
+    return no solution
+    
     """
 
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 1 ICI
     '''
+
+    
 
     util.raiseNotDefined()
 
