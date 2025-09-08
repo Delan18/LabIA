@@ -213,8 +213,31 @@ def aStarSearch(problem:SearchProblem, heuristic=nullHeuristic)->List[Direction]
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 4 ICI
     '''
+    start = problem.getStartState()
+    stack = util.PriorityQueue()
+    f = 0 + heuristic(start, problem)
+    stack.push((start, [], 0),f)
+    best_cost  = 0
+    visited = set()
+    
 
-    util.raiseNotDefined()
+    while not stack.isEmpty():
+        state, actions, cost = stack.pop()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        if problem.isGoalState(state):
+            return actions
+
+        for successor, action, cost2 in problem.getSuccessors(state):
+            if successor not in visited:
+                new_cost = cost + cost2
+                new_posible_cost = new_cost + heuristic(successor, problem)
+                stack.push((successor, actions + [action], new_cost), new_posible_cost)
+
+    return []
 
 
 # Abbreviations
