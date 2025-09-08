@@ -20,6 +20,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
+import queue
 from custom_types import Direction
 from pacman import GameState
 from typing import Any, Tuple,List
@@ -115,10 +116,27 @@ def depthFirstSearch(problem:SearchProblem)->List[Direction]:
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 1 ICI
     '''
+    stack = util.Stack()
+    start = problem.getStartState()
+    stack.push((start, []))
+    visited = set()
 
-    
+    while not stack.isEmpty():
+        state, actions = stack.pop()
 
-    util.raiseNotDefined()
+        if state in visited:
+            continue
+        visited.add(state)
+
+        if problem.isGoalState(state):
+            return actions
+
+        for successor, action, cost in problem.getSuccessors(state):
+            if successor not in visited:
+                stack.push((successor, actions + [action]))
+
+    return []
+
 
 
 def breadthFirstSearch(problem:SearchProblem)->List[Direction]:
