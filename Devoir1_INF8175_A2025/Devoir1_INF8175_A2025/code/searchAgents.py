@@ -299,6 +299,7 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
+        self.corner_index = {c: i for i, c in enumerate(self.corners)}
 
 
     def getStartState(self):
@@ -310,6 +311,8 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
+        mask = 0
+        return (self.startingPosition, mask)
         
         util.raiseNotDefined()
 
@@ -321,6 +324,8 @@ class CornersProblem(search.SearchProblem):
         '''
             INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
         '''
+        _, mask = state
+        return mask == 0b1111
 
         util.raiseNotDefined()
 
@@ -339,14 +344,19 @@ class CornersProblem(search.SearchProblem):
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
-           
+            (x,y), mask = state
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
             '''
                 INSÉREZ VOTRE SOLUTION À LA QUESTION 5 ICI
             '''
+            if not hitsWall:
+                next_mask = mask
+                pos = (nextx, nexty)
+                if pos in self.corner_index:
+                    next_mask |= (1 << self.corner_index[pos])
+                successors.append(((pos, next_mask), action, 1))
 
 
         self._expanded += 1 # DO NOT CHANGE
@@ -364,6 +374,9 @@ class CornersProblem(search.SearchProblem):
             x, y = int(x + dx), int(y + dy)
             if self.walls[x][y]: return 999999
         return len(actions)
+
+
+
 
 def cornersHeuristic(state, problem):
     """
@@ -384,8 +397,27 @@ def cornersHeuristic(state, problem):
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 6 ICI
     '''
-    
-    return 0
+    position = state[0]
+    visited = state[1]
+    remaining = [c for i, c in enumerate(corners) if not (visited & (1 << i))]
+    if not remaining:
+        return 0
+
+    manh = lambda a, b: abs(a[0]-b[0]) + abs(a[1]-b[1])
+
+    maxManhToCorner = max(manh(position, c) for c in remaining)
+
+    if len(remaining) >= 2:
+        maxManhBetweenCorners = 0
+        for i in range(len(remaining)):
+            for j in range(i+1, len(remaining)):
+                d = manh(remaining[i], remaining[j])
+                if d > maxManhBetweenCorners:
+                    maxManhBetweenCorners = d
+    else:
+        maxManhBetweenCorners = 0
+
+    return max(maxManhToCorner, maxManhBetweenCorners)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -482,7 +514,52 @@ def foodHeuristic(state, problem: FoodSearchProblem):
     '''
         INSÉREZ VOTRE SOLUTION À LA QUESTION 7 ICI
     '''
+    foodList = foodGrid.asList()
+    if not foodList:
+        return 0
 
+    bfs_cache = problem.heuristicInfo.setdefault('bfs_cache', {})
 
-    return 0
+    def getBfsFrom(start):
+        if start in bfs_cache:
+            return bfs_cache[start]
+        walls = problem.walls
+        width, height = walls.width, walls.height
+
+        def getNeighbors(x, y):
+            for dx, dy in ((1,0),(-1,0),(0,1),(0,-1)):
+                nextx, nexty = x+dx, y+dy
+                if 0 <= nextx < width and 0 <= nexty < height and not walls[nextx][nexty]:
+                    yield (nextx, nexty)
+
+        dist = {start: 0}
+        queue = util.Queue()
+        queue.push(start)
+        while not queue.isEmpty():
+            x, y = queue.pop()
+            d = dist[(x, y)]
+            for nb in getNeighbors(x, y):
+                if nb not in dist:
+                    dist[nb] = d + 1
+                    queue.push(nb)
+        bfs_cache[start] = dist
+        return dist
+
+    distmap = getBfsFrom(position)
+    farthest_from_pacman = max(distmap.get(f, 0) for f in foodList)
+
+    if len(foodList) >= 2:
+        manh = lambda a, b: abs(a[0]-b[0]) + abs(a[1]-b[1])
+        max_food_food_manh = 0
+        for i in range(len(foodList)):
+            ai = foodList[i]
+            for j in range(i+1, len(foodList)):
+                d = manh(ai, foodList[j])
+                if d > max_food_food_manh:
+                    max_food_food_manh = d
+    else:
+        max_food_food_manh = 0
+
+    return max(farthest_from_pacman, max_food_food_manh)
+
 
